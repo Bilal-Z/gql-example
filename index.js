@@ -49,6 +49,9 @@ const data = {
 };
 
 const typeDefs = `
+"""
+Books in the library
+"""
 type Book {
 	title: String!
 	subtitle: String
@@ -59,22 +62,18 @@ type Book {
 	description: String
 }
 
+"""
+Author of a book
+"""
 type Author {
 	id: ID!
 	firstName: String
 	lastName: String!
 }
 
-input CreateBookInput {
-	title: String!
-	subtitle: String
-	authorId: ID!
-	year: Int
-	isbn: ID!
-	pages: Int
-	description: String
-}
-
+"""
+Queries on service
+"""
 type Query {
 	getBooks: [Book]!
 	getBook(isbn: ID!): Book
@@ -82,9 +81,11 @@ type Query {
 	getAuthor(id: ID!): Author
 }
 
+"""
+Mutations on service
+"""
 type Mutation {
-	createAuthor(name: String): Author!
-	createBook(input: CreateBookInput!): Book!
+	createAuthor(lastName: String!, firstName: String): Author!
 }
 
 schema {
@@ -96,7 +97,7 @@ schema {
 const resolvers = {
 	Query: {
 		getBooks: (obj, args, context) => {
-			const books = context.books;
+			const books = [...context.books];
 			for (const book of books) {
 				if (typeof book.author === 'number') {
 					book.author = context.authors.find((a) => book.author === a.id);
@@ -114,6 +115,19 @@ const resolvers = {
 		getAuthors: (obj, args, context) => context.authors,
 		getAuthor: (obj, args, context) =>
 			context.authors.find((a) => a.id === Number(args.id)),
+	},
+	Mutation: {
+		createAuthor: (obj, args, context) => {
+			const author = {
+				id: context.authors.length + 1,
+				firstName: args.firstName,
+				lastName: args.lastName,
+			};
+			context.authors.push(author);
+			console.log(context.authors);
+
+			return author;
+		},
 	},
 };
 
